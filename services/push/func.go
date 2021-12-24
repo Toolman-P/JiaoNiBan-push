@@ -14,6 +14,17 @@ var conn *amqp.Connection
 var ch *amqp.Channel
 var q amqp.Queue
 
+func wrapTagRules(tags []string) []tpns.TagRule {
+	tagItem := tpns.TagItem{
+		Tags: tags,
+	}
+	var tagRule = tpns.TagRule{
+		TagItems: []tpns.TagItem{tagItem},
+		Operator: tpns.TagOperationOr,
+	}
+	return []tpns.TagRule{tagRule}
+}
+
 func Init() {
 	amqp_addr := os.Getenv("AMQP_ADDR")
 	conn, err := amqp.Dial(amqp_addr)
@@ -66,7 +77,7 @@ func ListenAndPush() {
 				tpns.WithContent(content),
 				tpns.WithEnvironment(tpns.Develop),
 				tpns.WithMessageType(tpns.Notify),
-				tpns.WithTagRules(WrapTagRules(TagMap[r.Author])),
+				tpns.WithTagRules(wrapTagRules(TagMap[r.Author])),
 			)
 
 			resp, err := client.Do(req)
