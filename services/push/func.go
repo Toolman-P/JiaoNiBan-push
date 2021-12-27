@@ -3,6 +3,7 @@ package push
 import (
 	"JiaoNiBan-push/services/tpns"
 	"encoding/json"
+	"errors"
 	"log"
 	"os"
 	"strconv"
@@ -51,6 +52,9 @@ func ListenAndPush() {
 	msgs, _ := ch.Consume("", queueid, false, false, false, false, nil)
 	accessId, _ := strconv.Atoi(os.Getenv("TPNS_ACCESSID"))
 	secretKey := os.Getenv("TPNS_SECRETKEY")
+	if accessId == 0 || len(secretKey) == 0 {
+		panic(errors.New("null push service account"))
+	}
 	client := tpns.NewClient(tpns.ShanghaiHost, uint32(accessId), secretKey)
 	done := make(chan bool)
 
@@ -64,8 +68,9 @@ func ListenAndPush() {
 
 			var content string
 
-			if len(r.Desc) > 40 {
-				content = r.Desc[:40]
+			if len(r.Desc) > 100 {
+				subarray := []rune(r.Desc)
+				content = string(subarray[:100]) + "..."
 			} else {
 				content = r.Desc
 			}
